@@ -53,12 +53,12 @@ To flip it: open `setup()`, change `TRIGGER_NOW: 'false'` to `TRIGGER_NOW: 'true
 `setup()` sets two properties for this:
 
 - **`WORK_PENSUM_PERCENT`** — your work pensum as a percentage of a full-time role, e.g. `'15'` for a 15% pensum.
-- **`WEEKLY_HOURS_FULLTIME`** — hours in a full-time (100%) work week, default `'42'`.
+- **`WEEKLY_HOURS_FULLTIME`** — hours in a full-time (100%) work week, default `'40'`.
 
-From these, the script calculates your *expected* hours for any period as `weeklyHours × (pensum / 100) × (days in period / 7)`, and the email shows:
+From these, the script calculates your *expected* hours as a fixed monthly target: `weeklyHours × (pensum / 100) × PENSUM_WEEKS_PER_MONTH` (a constant 4 weeks, near `pensumStats()`). At 40h/week and a 15% pensum that's 6h/week × 4 = 24h — and that figure is used as-is everywhere, **not** scaled by how many days the specific reported month actually has. The same expected-hours number is shown next to a full month's total, a partial month-to-date total, and every single month in the history table, regardless of whether that month had 28 or 31 days. The email shows:
 
-- Right under the total: your expected hours for the reported period, how far over/under that you are, and what % of your pensum you reached.
-- A "Pensum overview" table with one column per month, from **January through whichever is later: the reported month, or the month the script is actually running in** (see below). Three rows: hours worked, over/under, and % of pensum reached. Any month that isn't fully closed yet (a month-to-date column) has its expected hours prorated to the number of days elapsed, not the full month.
+- Right under the total: your expected hours (the fixed monthly target), how far over/under that you are, and what % of your pensum you reached.
+- A "Pensum overview" table with one column per month, from **January through whichever is later: the reported month, or the month the script is actually running in** (see below). Three rows: hours worked, over/under, and % of pensum reached — the same fixed expected-hours figure is used for every column, closed month or month-to-date alike.
 
 To change your pensum later, edit `WORK_PENSUM_PERCENT` in `setup()` and run `setup()` again — this is the only place it's set.
 

@@ -42,8 +42,13 @@
  * and WEEKLY_HOURS_FULLTIME in setup() below):
  *   WORK_PENSUM_PERCENT (e.g. '15' for a 15% pensum) and
  *   WEEKLY_HOURS_FULLTIME (default '40', a full-time work week) are
- *   used to calculate how many hours you're expected to work in a
- *   given period: weeklyHours * (pensum / 100) * (days in period / 7).
+ *   used to calculate your expected hours: weeklyHours * (pensum / 100)
+ *   * PENSUM_WEEKS_PER_MONTH (a fixed 4 weeks, see that constant near
+ *   pensumStats()). That's a fixed monthly target - it does NOT scale up
+ *   or down with how many days the specific reported month has, so the
+ *   same expected-hours figure shows up next to a full month's total, a
+ *   partial month-to-date total, and every single month in the history
+ *   table below.
  *   The email shows how your actual hours compare, both for the
  *   reported period and, month by month, from January of that year
  *   through whichever is later: the reported month, or the month the
@@ -127,11 +132,11 @@ function sendMonthlyKimaiReport() {
 
   const entries = fetchAllTimesheets(s.baseUrl, s.token, beginIso, endIso);
   const { totalSeconds, byGroup } = summarize(entries);
-  const pensum = pensumStats(totalSeconds, periodEnd, s.pensumPercent, s.weeklyHours);
+  const pensum = pensumStats(totalSeconds, s.pensumPercent, s.weeklyHours);
   // Always extends through the month the script is running in, even when
   // that's later than the reported month (e.g. a normal run on 1 Sept
   // reports August, but still shows September month-to-date too).
-  const history = buildPensumHistory(s, periodBegin.getFullYear(), periodBegin.getMonth(), periodEnd, totalSeconds, now);
+  const history = buildPensumHistory(s, periodBegin.getFullYear(), periodBegin.getMonth(), totalSeconds, now);
 
   const subject = entries.length
     ? 'Stunden im ' + periodLabel + ': ' + formatDuration(totalSeconds)
@@ -231,12 +236,20 @@ function summarize(entries) {
   return { totalSeconds: totalSeconds, byGroup: byGroup };
 }
 
-// periodEndDate must be a Date whose day-of-month reflects how many days
-// into the period we are (periods always start on the 1st), e.g. the
-// last day of a closed month, or "today" for a month-to-date period.
-function pensumStats(totalSeconds, periodEndDate, pensumPercent, weeklyHours) {
-  const daysInPeriod = periodEndDate.getDate();
-  const expectedHours = weeklyHours * (pensumPercent / 100) * (daysInPeriod / 7);
+// A "pensum month" is treated as a fixed 4 weeks, regardless of how many
+// days the actual calendar month has - so a 15% pensum expects the same
+// number of hours whether the reported month was a 28-day February or a
+// 31-day month. This constant is the only place that "4" lives.
+const PENSUM_WEEKS_PER_MONTH = 4;
+
+// Expected hours for the reported period: your weekly quota - weeklyHours
+// * (pensumPercent / 100) - times the fixed PENSUM_WEEKS_PER_MONTH. This
+// is intentionally NOT scaled by the actual number of days/weeks in the
+// specific reported period: the same expected-hours figure is used for a
+// full month, a month-to-date partial period, or any single month in the
+// history table below, so the target itself never moves around.
+function pensumStats(totalSeconds, pensumPercent, weeklyHours) {
+  const expectedHours = weeklyHours * (pensumPercent / 100) * PENSUM_WEEKS_PER_MONTH;
   const actualHours = totalSeconds / 3600;
   const diffHours = actualHours - expectedHours;
   const percent = expectedHours > 0 ? (actualHours / expectedHours) * 100 : 0;
@@ -255,28 +268,25 @@ function fetchMonthTotalSeconds(s, year, monthIndex, endIso) {
 // when it's after the reported month, e.g. a normal run on 1 Sept reports
 // August but still shows September month-to-date). Reuses the
 // already-fetched totals for the reported month instead of fetching twice.
-function buildPensumHistory(s, year, targetMonthIndex, currentPeriodEnd, currentTotalSeconds, now) {
+function buildPensumHistory(s, year, targetMonthIndex, currentTotalSeconds, now) {
   const months = [];
   const currentMonthIndex = now.getFullYear() === year ? now.getMonth() : targetMonthIndex;
   const uptoMonthIndex = Math.max(targetMonthIndex, currentMonthIndex);
 
   for (let m = 0; m <= uptoMonthIndex; m++) {
-    let totalSeconds, endDateForCalc;
+    let totalSeconds;
 
     if (m === targetMonthIndex) {
       totalSeconds = currentTotalSeconds;
-      endDateForCalc = currentPeriodEnd;
     } else if (m === currentMonthIndex) {
       totalSeconds = fetchMonthTotalSeconds(s, year, m, formatLocalIso(now));
-      endDateForCalc = now;
     } else {
       const monthEndDate = new Date(year, m + 1, 0); // last day of month m
       const mEndIso = formatLocalIso(new Date(monthEndDate.getFullYear(), monthEndDate.getMonth(), monthEndDate.getDate(), 23, 59, 59));
       totalSeconds = fetchMonthTotalSeconds(s, year, m, mEndIso);
-      endDateForCalc = monthEndDate;
     }
 
-    const stats = pensumStats(totalSeconds, endDateForCalc, s.pensumPercent, s.weeklyHours);
+    const stats = pensumStats(totalSeconds, s.pensumPercent, s.weeklyHours);
     const label = MONTH_ABBR_DE[m];
     months.push({ label: label, totalSeconds: totalSeconds, stats: stats });
   }
