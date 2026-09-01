@@ -71,7 +71,7 @@ function setup() {
     RECIPIENT_EMAIL: 'YOUR_MAIL',
     // true  -> report 1st of THIS month through today (month-to-date)
     // false -> report the previous full calendar month (normal monthly behaviour)
-    TRIGGER_NOW: 'false',
+    TRIGGER_NOW: 'true',
     // See "WORK PENSUM" at the top of this file for what these two do.
     WORK_PENSUM_PERCENT: '15',
     WEEKLY_HOURS_FULLTIME: '40'
