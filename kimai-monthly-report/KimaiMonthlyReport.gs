@@ -39,6 +39,8 @@
  *       fires, or it'll keep sending month-to-date instead of the full
  *       closed month.
  *
+ *
+ *
  * WORK PENSUM (the only place this is explained - see WORK_PENSUM_PERCENT
  * and WEEKLY_HOURS_FULLTIME in setup() below):
  *   WORK_PENSUM_PERCENT (e.g. '15' for a 15% pensum) and
