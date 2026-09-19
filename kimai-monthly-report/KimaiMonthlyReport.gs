@@ -1,5 +1,6 @@
 /**
  * Kimai Monthly Hours Report
+
  * ---------------------------
  * Fetches your Kimai timesheet entries for a period (previous month, or
  * this month to date) via the Kimai REST API and emails you a summary:
@@ -61,6 +62,7 @@
  *   Template deck) - not guessed. Edit getTheme() if the brand colors
  *   ever change.
  *
+
  * HOW TO GET YOUR KIMAI API TOKEN:
  *   In Kimai, open your user menu (top right) > "API access" / "API
  *   Token" page > "Create new token". Copy it immediately - Kimai only
