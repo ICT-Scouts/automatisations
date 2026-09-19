@@ -12,6 +12,7 @@
  * — nichts zu installieren, kein Add-on zu veröffentlichen. Die
  * Einrichtung steht ganz unten in dieser Datei.
  *
+ *
  * ZUM BEGRIFF "VORLAGE": Gmails eingebaute Vorlagen-Funktion (Einstellungen
  * > Erweitert > Vorlagen, "Entwurf als Vorlage speichern") hat keine
  * öffentliche Schnittstelle — Google hat weder für GmailApp noch für die
